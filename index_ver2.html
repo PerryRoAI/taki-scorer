@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>מיכאקי</title>
+  <style>
+    /* ═══════════════════════════════════════════════════════════
+       ROOT TOKENS
+    ═══════════════════════════════════════════════════════════ */
+    :root {
+      --bg:           #07071a;
+      --bg2:          #0d0d24;
+      --glass:        rgba(255,255,255,0.045);
+      --glass-border: rgba(255,255,255,0.09);
+      --glass-hover:  rgba(255,255,255,0.07);
+
+      --accent:       #ff3b6f;
+      --accent2:      #ff6b35;
+      --accent-glow:  rgba(255,59,111,0.35);
+
+      --blue:         #3d5afe;
+      --blue-dark:    #1a2a8a;
+
+      --text:         #f0f0f8;
+      --text-dim:     rgba(240,240,248,0.55);
+      --muted:        rgba(255,255,255,0.35);
+
+      --warning:      #ff1744;
+      --warn-glow:    rgba(255,23,68,0.4);
+
+      --success:      #00e676;
+      --success-dim:  rgba(0,230,118,0.15);
+      --success-glow: rgba(0,230,118,0.35);
+
+      --gold:         #ffd740;
+      --timer:        #ffab40;
+
+      --radius-card:  20px;
+      --radius-btn:   14px;
+      --shadow-card:  0 8px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.07);
+      --shadow-btn:   0 4px 18px var(--accent-glow);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      direction: rtl;
+      /* ambient light blobs */
+      background-image:
+        radial-gradient(ellipse 60% 50% at 15% 40%, rgba(61,90,254,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 60% at 85% 20%, rgba(255,59,111,0.10) 0%, transparent 65%),
+        radial-gradient(ellipse 40% 40% at 50% 90%, rgba(0,230,118,0.06) 0%, transparent 70%);
+      background-attachment: fixed;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       LOGO
+    ═══════════════════════════════════════════════════════════ */
+    .logo-img {
+      max-height: 110px;
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 0 18px rgba(255,59,111,0.45));
+      margin-bottom: .25rem;
+    }
+    .logo-img-sm {
+      max-height: 40px;
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 0 8px rgba(255,59,111,0.4));
+    }
+    /* Fallback text logo (if image fails) */
+    .logo-fallback {
+      font-size: 3.4rem;
+      font-weight: 900;
+      letter-spacing: 3px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 20px var(--accent-glow));
+    }
+    .logo-fallback-sm {
+      font-size: 1.5rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .logo-sub {
+      font-size: .82rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 2rem;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       GLASS PANEL
+    ═══════════════════════════════════════════════════════════ */
+    .glass-panel {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: var(--shadow-card);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       SETTINGS SCREEN
+    ═══════════════════════════════════════════════════════════ */
+    #settings-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+      gap: 0;
+    }
+
+    .settings-box {
+      width: 100%;
+      max-width: 460px;
+      padding: 2rem 1.75rem;
+    }
+
+    .field { margin-bottom: 1.6rem; }
+
+    .field-label {
+      display: block;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: .75rem;
+    }
+
+    /* stepper */
+    .stepper {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+    .step-btn {
+      width: 48px; height: 48px;
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      background: rgba(61,90,254,0.18);
+      color: #fff;
+      font-size: 1.7rem;
+      line-height: 1;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .15s;
+      user-select: none;
+      box-shadow: 0 2px 12px rgba(61,90,254,0.25);
+    }
+    .step-btn:hover {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-color: transparent;
+      box-shadow: var(--shadow-btn);
+      transform: translateY(-1px);
+    }
+    .step-btn:disabled { opacity: .3; cursor: default; transform: none; }
+    #count-val {
+      font-size: 2.8rem;
+      font-weight: 900;
+      min-width: 56px;
+      text-align: center;
+      background: linear-gradient(135deg, var(--text), var(--text-dim));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* name inputs */
+    .name-list { display: flex; flex-direction: column; gap: .6rem; }
+    .name-row { display: flex; align-items: center; gap: .75rem; }
+    .name-num {
+      font-size: .85rem;
+      font-weight: 800;
+      color: var(--accent);
+      min-width: 22px;
+      text-align: center;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: .65rem 1rem;
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: 11px;
+      background: rgba(0,0,0,0.3);
+      color: var(--text);
+      font-size: .95rem;
+      text-align: right;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(255,59,111,0.18);
+    }
+
+    /* primary CTA button */
+    .btn-primary {
+      width: 100%;
+      padding: 1.05rem;
+      border: none;
+      border-radius: var(--radius-btn);
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: .5px;
+      cursor: pointer;
+      transition: all .2s;
+      margin-top: .75rem;
+      box-shadow: var(--shadow-btn);
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0);
+      transition: background .2s;
+    }
+    .btn-primary:hover::before { background: rgba(255,255,255,0.08); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px var(--accent-glow); }
+    .btn-primary:active { transform: translateY(0); }
+
+    /* ═══════════════════════════════════════════════════════════
+       GAME SCREEN
+    ═══════════════════════════════════════════════════════════ */
+    #game-screen {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+      padding: 0 .75rem .75rem;
+    }
+
+    .game-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .6rem .25rem;
+      margin-bottom: .85rem;
+      border-bottom: 1px solid var(--glass-border);
+      gap: .5rem;
+      position: sticky;
+      top: 0;
+      background: rgba(7,7,26,0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      z-index: 10;
+    }
+    .hdr-logo { display: flex; align-items: center; }
+
+    .hdr-btns { display: flex; gap: .45rem; }
+    .btn-sm {
+      padding: .45rem .95rem;
+      border-radius: 9px;
+      font-size: .78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .15s;
+      letter-spacing: .3px;
+    }
+    .btn-new {
+      border: 1px solid var(--glass-border);
+      background: var(--glass);
+      color: var(--text);
+    }
+    .btn-new:hover { background: var(--glass-hover); }
+    .btn-reset {
+      border: 1px solid rgba(255,23,68,0.4);
+      background: rgba(255,23,68,0.08);
+      color: var(--warning);
+    }
+    .btn-reset:hover { background: rgba(255,23,68,0.18); }
+
+    /* ═══════════════════════════════════════════════════════════
+       PLAYER CARDS
+    ═══════════════════════════════════════════════════════════ */
+    .players-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+      gap: .75rem;
+      margin-bottom: .85rem;
+    }
+
+    .pcard {
+      border-radius: var(--radius-card);
+      padding: 1.25rem 1rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .45rem;
+      background: linear-gradient(145deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--shadow-card);
+      transition: transform .2s, box-shadow .2s, border-color .3s, background .3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .pcard::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    }
+
+    /* WARNING state */
+    .pcard.alert {
+      border-color: var(--warning);
+      animation: redpulse 1.1s ease-in-out infinite alternate;
+    }
+    @keyframes redpulse {
+      from { background: linear-gradient(145deg, rgba(255,23,68,0.12) 0%, rgba(255,23,68,0.05) 100%); box-shadow: 0 0 0 0 var(--warn-glow), var(--shadow-card); }
+      to   { background: linear-gradient(145deg, rgba(255,23,68,0.25) 0%, rgba(255,23,68,0.12) 100%); box-shadow: 0 0 20px 4px var(--warn-glow), var(--shadow-card); }
+    }
+
+    /* FINISHED state */
+    .pcard.finished {
+      border-color: rgba(0,230,118,0.4);
+      background: linear-gradient(145deg, var(--success-dim) 0%, rgba(0,230,118,0.04) 100%);
+      box-shadow: 0 0 18px 2px var(--success-glow), var(--shadow-card);
+    }
+
+    .pcard-name {
+      font-size: .82rem;
+      font-weight: 700;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      text-align: center;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Rank label shown when finished */
+    .rank-label {
+      font-size: .78rem;
+      font-weight: 800;
+      padding: .2rem .7rem;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--gold), #ff9800);
+      color: #000;
+      letter-spacing: .3px;
+      text-align: center;
+      line-height: 1.4;
+    }
+    .rank-label.silver { background: linear-gradient(135deg, #e0e0e0, #9e9e9e); }
+    .rank-label.bronze { background: linear-gradient(135deg, #cd7f32, #8d5524); color: #fff; }
+    .rank-label.plain  { background: rgba(255,255,255,0.1); color: var(--text-dim); border: 1px solid var(--glass-border); }
+
+    /* Big card number */
+    .big-count {
+      font-size: 4.8rem;
+      font-weight: 900;
+      line-height: 1;
+      background: linear-gradient(160deg, #ffffff 30%, rgba(255,255,255,0.6));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
+      transition: filter .3s;
+    }
+    .big-count.hot {
+      background: linear-gradient(160deg, #ff5252, #ff1744);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 12px var(--warn-glow));
+      animation: hotpulse 1.5s ease-in-out infinite alternate;
+    }
+    @keyframes hotpulse {
+      from { filter: drop-shadow(0 0 6px rgba(255,23,68,0.4)); }
+      to   { filter: drop-shadow(0 0 18px rgba(255,23,68,0.8)); }
+    }
+    .done-text {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--success);
+      text-align: center;
+      line-height: 1.4;
+      -webkit-text-fill-color: var(--success);
+    }
+
+    /* Timer */
+    .timer-lbl {
+      font-size: .72rem;
+      font-weight: 600;
+      color: var(--timer);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: .5px;
+      min-height: 1em;
+      opacity: .85;
+    }
+
+    /* Drop button */
+    .drop-btn {
+      width: 100%;
+      padding: .9rem;
+      border: none;
+      border-radius: var(--radius-btn);
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      color: #fff;
+      font-size: 1.05rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all .18s;
+      margin-top: .3rem;
+      box-shadow: 0 3px 12px var(--accent-glow);
+      letter-spacing: .3px;
+      position: relative;
+      overflow: hidden;
+    }
+    .drop-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0);
+      transition: background .15s;
+    }
+    .drop-btn:hover:not(:disabled)::after { background: rgba(255,255,255,0.1); }
+    .drop-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 22px var(--accent-glow);
+    }
+    .drop-btn:active:not(:disabled) { transform: translateY(0) scale(0.97); }
+    .drop-btn:disabled {
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.2);
+      cursor: default;
+      box-shadow: none;
+    }
+
+    /* Dismiss warning button */
+    .dismiss-btn {
+      width: 100%;
+      padding: .5rem;
+      border: 1px solid rgba(255,23,68,0.5);
+      border-radius: 10px;
+      background: rgba(255,23,68,0.08);
+      color: var(--warning);
+      font-size: .76rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s;
+      display: none;
+      letter-spacing: .3px;
+    }
+    .dismiss-btn.show { display: block; }
+    .dismiss-btn:hover { background: rgba(255,23,68,0.2); }
+
+    /* ═══════════════════════════════════════════════════════════
+       LOG SECTION
+    ═══════════════════════════════════════════════════════════ */
+    .log-section {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 18px;
+      overflow: hidden;
+      flex-shrink: 0;
+      backdrop-filter: blur(12px);
+    }
+    .log-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .75rem 1.1rem;
+      cursor: pointer; user-select: none;
+      border-bottom: 1px solid transparent;
+      transition: background .15s;
+    }
+    .log-head:hover { background: var(--glass-hover); }
+    .log-head.open { border-bottom-color: var(--glass-border); }
+    .log-head-title { font-size: .85rem; font-weight: 700; letter-spacing: .5px; }
+    .log-head-caret { color: var(--muted); font-size: .75rem; }
+
+    .log-body { max-height: 260px; overflow-y: auto; display: none; }
+    .log-body.open { display: block; }
+
+    table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+    thead th {
+      background: rgba(0,0,0,0.3);
+      padding: .5rem 1rem;
+      text-align: right;
+      color: var(--muted);
+      font-weight: 700;
+      letter-spacing: .5px;
+      font-size: .72rem;
+      text-transform: uppercase;
+      position: sticky; top: 0;
+    }
+    tbody td { padding: .45rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
+    tbody tr:hover td { background: rgba(255,255,255,0.04); }
+
+    /* ═══════════════════════════════════════════════════════════
+       CONFIRM DIALOG
+    ═══════════════════════════════════════════════════════════ */
+    .overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(6px);
+      z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    .overlay.open { display: flex; }
+    .dialog {
+      background: linear-gradient(145deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.04) 100%);
+      border: 1px solid var(--glass-border);
+      border-radius: 22px;
+      padding: 2rem 1.75rem;
+      width: 90%; max-width: 320px;
+      text-align: center;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.1);
+      backdrop-filter: blur(20px);
+      animation: dlgIn .2s ease;
+    }
+    @keyframes dlgIn {
+      from { transform: scale(.92); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+    .dialog h3 { font-size: 1.15rem; margin-bottom: .65rem; font-weight: 800; }
+    .dialog p { color: var(--text-dim); font-size: .86rem; margin-bottom: 1.5rem; line-height: 1.55; }
+    .dialog-row { display: flex; gap: .7rem; justify-content: center; }
+    .btn-ok {
+      padding: .6rem 1.5rem;
+      border: none; border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      font-size: .9rem; font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 3px 12px var(--accent-glow);
+      transition: all .15s;
+    }
+    .btn-ok:hover { transform: translateY(-1px); box-shadow: 0 5px 18px var(--accent-glow); }
+    .btn-cancel {
+      padding: .6rem 1.5rem;
+      border: 1px solid var(--glass-border); border-radius: 10px;
+      background: var(--glass); color: var(--text);
+      font-size: .9rem; cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-cancel:hover { background: var(--glass-hover); }
+
+    /* ═══════════════════════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════════════════════ */
+    @media (max-width: 480px) {
+      .players-grid { grid-template-columns: repeat(2, 1fr); gap: .55rem; }
+      .big-count { font-size: 3.8rem; }
+      .logo-img { max-height: 80px; }
+    }
+    @media (max-width: 320px) {
+      .players-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════ SETTINGS SCREEN ═══════════ -->
+<div id="settings-screen">
+  <img src="לוגו 5.png" class="logo-img" alt="מיכאקי"
+       onerror="this.style.display='none';document.getElementById('logo-fb').style.display='block'">
+  <div id="logo-fb" class="logo-fallback" style="display:none">מיכאקי</div>
+  <div class="logo-sub">ניקוד לטאקי יורד</div>
+
+  <div class="glass-panel settings-box">
+    <div class="field">
+      <span class="field-label">מספר שחקנים</span>
+      <div class="stepper">
+        <button class="step-btn" id="btn-plus">+</button>
+        <div id="count-val">2</div>
+        <button class="step-btn" id="btn-minus">−</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="field-label">שמות שחקנים</span>
+      <div class="name-list" id="name-list"></div>
+    </div>
+
+    <button class="btn-primary" id="start-btn">התחל משחק ▶</button>
+  </div>
+</div>
+
+<!-- ═══════════ GAME SCREEN ═══════════ -->
+<div id="game-screen">
+  <div class="game-header">
+    <div class="hdr-logo">
+      <img src="לוגו 5.png" class="logo-img-sm" alt="מיכאקי"
+           onerror="this.style.display='none';document.getElementById('hdr-logo-fb').style.display='block'">
+      <div id="hdr-logo-fb" class="logo-fallback-sm" style="display:none">מיכאקי</div>
+    </div>
+    <div class="hdr-btns">
+      <button class="btn-sm btn-new" id="new-game-btn">משחק חדש</button>
+      <button class="btn-sm btn-reset" id="reset-btn">איפוס</button>
+    </div>
+  </div>
+
+  <div class="players-grid" id="players-grid"></div>
+
+  <div class="log-section">
+    <div class="log-head" id="log-head">
+      <span class="log-head-title">יומן ירידות</span>
+      <span class="log-head-caret" id="log-caret">▼ הצג</span>
+    </div>
+    <div class="log-body" id="log-body">
+      <table>
+        <thead>
+          <tr><th>#</th><th>שחקן</th><th>קלפים שנותרו</th><th>שעה</th></tr>
+        </thead>
+        <tbody id="log-rows"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ CONFIRM DIALOG ═══════════ -->
+<div class="overlay" id="overlay">
+  <div class="dialog">
+    <h3 id="dlg-title"></h3>
+    <p id="dlg-msg"></p>
+    <div class="dialog-row">
+      <button class="btn-ok" id="dlg-ok">אישור</button>
+      <button class="btn-cancel" id="dlg-cancel">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  CONSTANTS & STATE
+// ═══════════════════════════════════════════════════════════════
+const INIT_CARDS = 8;
+const BASE_SEC   = 3;
+const LS_KEY     = 'miKaKi_v1';
+
+const RANK_HE = [
+  'מקום ראשון 🥇',
+  'מקום שני 🥈',
+  'מקום שלישי 🥉',
+  'מקום רביעי',
+  'מקום חמישי',
+  'מקום שישי',
+  'מקום שביעי',
+  'מקום שמיני',
+  'מקום תשיעי',
+  'מקום עשירי',
+];
+
+let S = {
+  screen:      'settings',
+  playerCount: 2,
+  names:       ['שחקן 1', 'שחקן 2'],
+  cards:       [],
+  lastDrop:    [],
+  alertOn:     [],
+  finishRank:  [],
+  log:         [],
+  logOpen:     false,
+};
+
+let finishedCount = 0;
+let pendingAction = null;
+let timerInterval = null;
+
+// ═══════════════════════════════════════════════════════════════
+//  PERSISTENCE
+// ═══════════════════════════════════════════════════════════════
+function save() { localStorage.setItem(LS_KEY, JSON.stringify(S)); }
+
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem(LS_KEY));
+    if (d && d.screen) {
+      Object.assign(S, d);
+      finishedCount = S.finishRank.filter(r => r > 0).length;
+    }
+  } catch {}
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  AUDIO ENGINE
+// ═══════════════════════════════════════════════════════════════
+let _sharedCtx = null;
+
+function getCtx() {
+  if (!_sharedCtx) {
+    _sharedCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (_sharedCtx.state === 'suspended') _sharedCtx.resume();
+  return _sharedCtx;
+}
+
+function playNote(ctx, freq, startTime, dur, vol = 0.28, type = 'sine') {
+  const osc  = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, startTime);
+  gain.gain.setValueAtTime(0, startTime);
+  gain.gain.linearRampToValueAtTime(vol, startTime + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.001, startTime + dur);
+  osc.start(startTime);
+  osc.stop(startTime + dur + 0.05);
+}
+
+// Warning beep – three sharp square-wave blips
+function beep() {
+  try {
+    const ctx = getCtx();
+    const t   = ctx.currentTime;
+    [0, 0.22, 0.44].forEach(d => playNote(ctx, 900, t + d, 0.17, 0.28, 'square'));
+  } catch {}
+}
+
+// Victory fanfare – ascending trumpet-like phrase
+function playVictory() {
+  try {
+    const ctx = getCtx();
+    const t   = ctx.currentTime;
+    // G4-C5-E5-G5 quick, then C6 held
+    const notes = [
+      { f: 392.00, d: 0,     l: 0.14 },
+      { f: 523.25, d: 0.16,  l: 0.14 },
+      { f: 659.25, d: 0.32,  l: 0.14 },
+      { f: 783.99, d: 0.48,  l: 0.14 },
+      { f: 1046.5, d: 0.64,  l: 0.55 },
+    ];
+    notes.forEach(n => {
+      playNote(ctx, n.f, t + n.d, n.l, 0.32, 'triangle');
+      // add a slight harmonic for richness
+      playNote(ctx, n.f * 2, t + n.d, n.l * 0.7, 0.08, 'sine');
+    });
+    // Shimmering tail
+    playNote(ctx, 1318.5, t + 0.68, 0.45, 0.06, 'sine');
+  } catch {}
+}
+
+// Intro jingle – plays on first user interaction
+let introPlayed = false;
+
+function playIntroJingle() {
+  if (introPlayed) return;
+  introPlayed = true;
+  try {
+    const ctx = getCtx();
+    const t   = ctx.currentTime;
+
+    // A playful ascending phrase: Mi–Ka–Ki 🎶
+    // E5  G5  A5  E5  (with harmonics for warmth)
+    const phrase = [
+      { f: 659.25, d: 0,    l: 0.22 },
+      { f: 783.99, d: 0.25, l: 0.22 },
+      { f: 880.00, d: 0.50, l: 0.22 },
+      { f: 659.25, d: 0.75, l: 0.35 },
+    ];
+    phrase.forEach(n => {
+      playNote(ctx, n.f,     t + n.d, n.l, 0.22, 'sine');
+      playNote(ctx, n.f * 2, t + n.d, n.l * 0.6, 0.06, 'sine');
+    });
+
+    // Then try SpeechSynthesis to announce the name
+    if ('speechSynthesis' in window) {
+      setTimeout(() => {
+        const utt  = new SpeechSynthesisUtterance('מיכאקי');
+        utt.lang   = 'he-IL';
+        utt.rate   = 0.82;
+        utt.pitch  = 1.25;
+        utt.volume = 0.85;
+        window.speechSynthesis.speak(utt);
+      }, 1100);
+    }
+  } catch {}
+}
+
+// Queue intro for first interaction (autoplay policy)
+function scheduleIntro() {
+  const go = () => {
+    playIntroJingle();
+    document.removeEventListener('click',      go);
+    document.removeEventListener('touchstart', go);
+  };
+  document.addEventListener('click',      go, { once: true });
+  document.addEventListener('touchstart', go, { once: true });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════════════
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function fmtElapsed(ms) {
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  const h = Math.floor(m / 60);
+  return h > 0 ? `${h}:${pad(m % 60)}:${pad(s % 60)}` : `${m}:${pad(s % 60)}`;
+}
+
+function fmtTime(ts) {
+  const d = new Date(ts);
+  return d.toLocaleTimeString('he-IL', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+
+function rankLabel(rank) {
+  // Returns { text, cls }
+  const text = RANK_HE[rank - 1] || `מקום ${rank}`;
+  const cls  = rank === 1 ? '' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : 'plain';
+  return { text, cls };
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SETTINGS SCREEN
+// ═══════════════════════════════════════════════════════════════
+function showSettings() {
+  document.getElementById('settings-screen').style.display = 'flex';
+  document.getElementById('game-screen').style.display    = 'none';
+  document.getElementById('count-val').textContent = S.playerCount;
+  renderNameInputs();
+}
+
+function renderNameInputs() {
+  const list = document.getElementById('name-list');
+  list.innerHTML = '';
+  for (let i = 0; i < S.playerCount; i++) {
+    const row = document.createElement('div');
+    row.className = 'name-row';
+    const inp = document.createElement('input');
+    inp.type        = 'text';
+    inp.value       = S.names[i] || `שחקן ${i + 1}`;
+    inp.placeholder = `שחקן ${i + 1}`;
+    inp.dataset.i   = i;
+    // Auto-select all text on focus
+    inp.addEventListener('focus', e => e.target.select());
+    inp.addEventListener('input', e => {
+      const idx = +e.target.dataset.i;
+      S.names[idx] = e.target.value.trim() || `שחקן ${idx + 1}`;
+      save();
+    });
+    row.innerHTML = `<span class="name-num">${i + 1}.</span>`;
+    row.appendChild(inp);
+    list.appendChild(row);
+  }
+}
+
+function syncNamesFromInputs() {
+  document.querySelectorAll('#name-list input').forEach((inp, i) => {
+    S.names[i] = inp.value.trim() || `שחקן ${i + 1}`;
+  });
+}
+
+document.getElementById('btn-plus').addEventListener('click', () => {
+  if (S.playerCount >= 10) return;
+  S.playerCount++;
+  if (!S.names[S.playerCount - 1]) S.names[S.playerCount - 1] = `שחקן ${S.playerCount}`;
+  document.getElementById('count-val').textContent = S.playerCount;
+  renderNameInputs();
+  save();
+});
+
+document.getElementById('btn-minus').addEventListener('click', () => {
+  if (S.playerCount <= 2) return;
+  S.playerCount--;
+  document.getElementById('count-val').textContent = S.playerCount;
+  renderNameInputs();
+  save();
+});
+
+document.getElementById('start-btn').addEventListener('click', () => {
+  syncNamesFromInputs();
+  S.names = S.names.slice(0, S.playerCount);
+  initGame();
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  GAME INIT
+// ═══════════════════════════════════════════════════════════════
+function initGame() {
+  finishedCount    = 0;
+  S.cards          = Array(S.playerCount).fill(INIT_CARDS);
+  S.lastDrop       = Array(S.playerCount).fill(null);
+  S.alertOn        = Array(S.playerCount).fill(false);
+  S.finishRank     = Array(S.playerCount).fill(0);
+  S.log            = [];
+  S.screen         = 'game';
+  S.logOpen        = false;
+  save();
+  showGame();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  GAME SCREEN
+// ═══════════════════════════════════════════════════════════════
+function showGame() {
+  document.getElementById('settings-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display     = 'flex';
+  renderAllCards();
+  renderLog();
+  syncLogUI();
+  startTimer();
+}
+
+function renderAllCards() {
+  const grid = document.getElementById('players-grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < S.playerCount; i++) grid.appendChild(buildCard(i));
+}
+
+function buildCard(i) {
+  const done  = S.cards[i] === 0;
+  const alert = S.alertOn[i];
+  const rank  = S.finishRank[i];
+
+  const wrap = document.createElement('div');
+  wrap.className = 'pcard' + (alert ? ' alert' : '') + (done ? ' finished' : '');
+  wrap.id = `pcard-${i}`;
+
+  // ── Name row ──
+  const nameEl = document.createElement('div');
+  nameEl.className = 'pcard-name';
+  nameEl.textContent = S.names[i];
+  wrap.appendChild(nameEl);
+
+  // ── Rank label (only when finished) ──
+  if (done && rank > 0) {
+    const { text, cls } = rankLabel(rank);
+    const badge = document.createElement('div');
+    badge.className = 'rank-label ' + cls;
+    badge.textContent = text;
+    wrap.appendChild(badge);
+  }
+
+  // ── Big count / done text ──
+  const countEl = document.createElement('div');
+  countEl.id = `count-${i}`;
+  if (done) {
+    countEl.className = 'done-text';
+    countEl.textContent = '✓ סיים';
+  } else {
+    countEl.className = 'big-count' + (S.cards[i] <= 2 ? ' hot' : '');
+    countEl.textContent = S.cards[i];
+  }
+  wrap.appendChild(countEl);
+
+  // ── Timer ──
+  const timerEl = document.createElement('div');
+  timerEl.className = 'timer-lbl';
+  timerEl.id = `timer-${i}`;
+  if (!done && S.lastDrop[i] !== null) {
+    timerEl.textContent = '⏱ ' + fmtElapsed(Date.now() - S.lastDrop[i]);
+  }
+  wrap.appendChild(timerEl);
+
+  // ── Drop button ──
+  const dropBtn = document.createElement('button');
+  dropBtn.className  = 'drop-btn';
+  dropBtn.id         = `drop-${i}`;
+  dropBtn.disabled   = done;
+  dropBtn.textContent = done ? 'סיים ✓' : 'ירד! 🎴';
+  dropBtn.addEventListener('click', () => handleDrop(i));
+  wrap.appendChild(dropBtn);
+
+  // ── Dismiss warning button ──
+  const dismissBtn = document.createElement('button');
+  dismissBtn.className  = 'dismiss-btn' + (alert ? ' show' : '');
+  dismissBtn.id         = `dismiss-${i}`;
+  dismissBtn.textContent = 'אישור - זה נכון ✓';
+  dismissBtn.addEventListener('click', () => handleDismiss(i));
+  wrap.appendChild(dismissBtn);
+
+  return wrap;
+}
+
+function refreshCard(i) {
+  const old = document.getElementById(`pcard-${i}`);
+  if (old) old.replaceWith(buildCard(i));
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DROP LOGIC
+// ═══════════════════════════════════════════════════════════════
+function handleDrop(i) {
+  if (S.cards[i] <= 0) return;
+
+  const now      = Date.now();
+  const curCards = S.cards[i];
+  const thresh   = curCards * S.playerCount * BASE_SEC * 1000;
+
+  // Warning check
+  let tooFast = false;
+  if (S.lastDrop[i] !== null && (now - S.lastDrop[i]) < thresh) tooFast = true;
+
+  // Decrement
+  S.cards[i]--;
+  S.lastDrop[i] = now;
+
+  // Finish?
+  if (S.cards[i] === 0) {
+    finishedCount++;
+    S.finishRank[i] = finishedCount;
+    playVictory();
+  }
+
+  // Warning
+  if (tooFast) {
+    S.alertOn[i] = true;
+    beep();
+  }
+
+  // Log (newest first)
+  S.log.unshift({ ts: now, name: S.names[i], cardsLeft: S.cards[i] });
+
+  save();
+  refreshCard(i);
+  renderLog();
+}
+
+function handleDismiss(i) {
+  S.alertOn[i] = false;
+  save();
+  refreshCard(i);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TIMER
+// ═══════════════════════════════════════════════════════════════
+function startTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    if (S.screen !== 'game') return;
+    const now = Date.now();
+    for (let i = 0; i < S.playerCount; i++) {
+      if (S.cards[i] > 0 && S.lastDrop[i] !== null) {
+        const el = document.getElementById(`timer-${i}`);
+        if (el) el.textContent = '⏱ ' + fmtElapsed(now - S.lastDrop[i]);
+      }
+    }
+  }, 1000);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  LOG
+// ═══════════════════════════════════════════════════════════════
+function renderLog() {
+  const tbody = document.getElementById('log-rows');
+  tbody.innerHTML = '';
+  S.log.forEach((e, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${S.log.length - idx}</td>
+      <td>${e.name}</td>
+      <td>${e.cardsLeft}</td>
+      <td>${fmtTime(e.ts)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function syncLogUI() {
+  const body  = document.getElementById('log-body');
+  const caret = document.getElementById('log-caret');
+  const head  = document.getElementById('log-head');
+  body.className  = 'log-body'  + (S.logOpen ? ' open' : '');
+  head.className  = 'log-head'  + (S.logOpen ? ' open' : '');
+  caret.textContent = S.logOpen ? '▲ הסתר' : '▼ הצג';
+}
+
+document.getElementById('log-head').addEventListener('click', () => {
+  S.logOpen = !S.logOpen;
+  save();
+  syncLogUI();
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  NEW GAME / RESET
+// ═══════════════════════════════════════════════════════════════
+function showDialog(title, msg, action) {
+  pendingAction = action;
+  document.getElementById('dlg-title').textContent = title;
+  document.getElementById('dlg-msg').textContent   = msg;
+  document.getElementById('overlay').classList.add('open');
+}
+
+document.getElementById('new-game-btn').addEventListener('click', () => {
+  showDialog('משחק חדש', 'להתחיל משחק חדש עם אותם שחקנים?', 'newgame');
+});
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+  showDialog('איפוס', 'לאפס לברירת מחדל: 2 שחקנים, שחקן 1 ו-שחקן 2?', 'reset');
+});
+
+document.getElementById('dlg-ok').addEventListener('click', () => {
+  document.getElementById('overlay').classList.remove('open');
+  if (pendingAction === 'newgame') {
+    initGame();
+  } else if (pendingAction === 'reset') {
+    S.playerCount = 2;
+    S.names       = ['שחקן 1', 'שחקן 2'];
+    S.screen      = 'settings';
+    save();
+    showSettings();
+  }
+  pendingAction = null;
+});
+
+document.getElementById('dlg-cancel').addEventListener('click', () => {
+  document.getElementById('overlay').classList.remove('open');
+  pendingAction = null;
+});
+
+document.getElementById('overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('overlay')) {
+    document.getElementById('overlay').classList.remove('open');
+    pendingAction = null;
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════
+load();
+scheduleIntro();   // intro jingle fires on first click/touch
+
+if (S.screen === 'game') {
+  showGame();
+} else {
+  showSettings();
+}
+</script>
+</body>
+</html>

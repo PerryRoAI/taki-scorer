@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>מיכאקי</title>
+  <style>
+    :root {
+      --bg: #12121e;
+      --surface: #1c1c2e;
+      --surface2: #252540;
+      --accent: #e94560;
+      --accent-dim: #c73652;
+      --blue: #0f3460;
+      --text: #eaeaea;
+      --muted: #7a7a9a;
+      --warning: #ff4444;
+      --success: #4caf50;
+      --timer: #f39c12;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      direction: rtl;
+    }
+
+    /* ── SETTINGS SCREEN ─────────────────────────────────────── */
+    #settings-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    .logo {
+      font-size: 3.5rem;
+      font-weight: 900;
+      color: var(--accent);
+      text-shadow: 0 0 30px rgba(233,69,96,.5);
+      letter-spacing: 3px;
+    }
+    .logo-sub {
+      color: var(--muted);
+      font-size: .9rem;
+      margin-bottom: 2rem;
+      letter-spacing: 1px;
+    }
+
+    .box {
+      background: var(--surface);
+      border-radius: 20px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 16px 48px rgba(0,0,0,.5);
+    }
+
+    .field-label {
+      display: block;
+      color: var(--muted);
+      font-size: .8rem;
+      font-weight: 600;
+      letter-spacing: .5px;
+      margin-bottom: .6rem;
+    }
+
+    .field { margin-bottom: 1.5rem; }
+
+    /* player count stepper */
+    .stepper {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+    .step-btn {
+      width: 44px; height: 44px;
+      border: none; border-radius: 10px;
+      background: var(--blue);
+      color: #fff;
+      font-size: 1.6rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+      user-select: none;
+    }
+    .step-btn:hover { background: var(--accent); }
+    .step-btn:disabled { opacity: .35; cursor: default; }
+    #count-val {
+      font-size: 2.4rem;
+      font-weight: 800;
+      min-width: 50px;
+      text-align: center;
+    }
+
+    /* name inputs */
+    .name-list { display: flex; flex-direction: column; gap: .65rem; }
+    .name-row { display: flex; align-items: center; gap: .7rem; }
+    .name-num {
+      color: var(--accent);
+      font-weight: 700;
+      font-size: .95rem;
+      min-width: 22px;
+      text-align: center;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: .6rem .85rem;
+      border: 1.5px solid #2e2e4e;
+      border-radius: 10px;
+      background: #0d0d1a;
+      color: var(--text);
+      font-size: 1rem;
+      text-align: right;
+      outline: none;
+      transition: border-color .2s;
+    }
+    input[type="text"]:focus { border-color: var(--accent); }
+
+    .btn-primary {
+      width: 100%;
+      padding: 1rem;
+      border: none; border-radius: 14px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 1.15rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all .2s;
+      margin-top: .5rem;
+      letter-spacing: .5px;
+    }
+    .btn-primary:hover {
+      background: var(--accent-dim);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(233,69,96,.4);
+    }
+
+    /* ── GAME SCREEN ─────────────────────────────────────────── */
+    #game-screen {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+      padding: 0 .75rem .75rem;
+    }
+
+    .game-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .7rem 0 .7rem;
+      border-bottom: 1px solid #2a2a40;
+      margin-bottom: .85rem;
+      gap: .5rem;
+    }
+    .game-logo { font-size: 1.5rem; font-weight: 900; color: var(--accent); }
+
+    .hdr-btns { display: flex; gap: .45rem; }
+    .btn-sm {
+      padding: .45rem .9rem;
+      border-radius: 8px;
+      font-size: .8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+      letter-spacing: .3px;
+    }
+    .btn-new {
+      border: 1.5px solid #3a3a5a;
+      background: transparent;
+      color: var(--text);
+    }
+    .btn-new:hover { background: #2a2a40; }
+    .btn-reset {
+      border: 1.5px solid var(--warning);
+      background: transparent;
+      color: var(--warning);
+    }
+    .btn-reset:hover { background: rgba(255,68,68,.12); }
+
+    /* players grid */
+    .players-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: .75rem;
+      margin-bottom: .85rem;
+    }
+
+    .pcard {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 1.1rem .9rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .4rem;
+      border: 2px solid transparent;
+      transition: border-color .3s, background .3s;
+      position: relative;
+    }
+    .pcard.alert {
+      border-color: var(--warning);
+      animation: redpulse 1s ease-in-out infinite alternate;
+    }
+    @keyframes redpulse {
+      from { background: var(--surface); }
+      to   { background: rgba(255,68,68,.18); }
+    }
+    .pcard.finished {
+      border-color: var(--success);
+      opacity: .75;
+    }
+
+    .pcard-name {
+      font-size: .9rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-align: center;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .rank-badge {
+      font-size: .75rem;
+      font-weight: 800;
+      color: var(--bg);
+      background: var(--success);
+      border-radius: 999px;
+      padding: .1rem .5rem;
+    }
+
+    .big-count {
+      font-size: 4.2rem;
+      font-weight: 900;
+      line-height: 1;
+      color: var(--text);
+      transition: color .3s;
+    }
+    .big-count.hot { color: var(--warning); }
+    .big-count.done-icon { font-size: 1.8rem; color: var(--success); }
+
+    .timer-lbl {
+      font-size: .75rem;
+      color: var(--timer);
+      font-variant-numeric: tabular-nums;
+      min-height: 1.1em;
+    }
+
+    .drop-btn {
+      width: 100%;
+      padding: .9rem;
+      border: none; border-radius: 12px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all .2s;
+      margin-top: .3rem;
+    }
+    .drop-btn:hover:not(:disabled) {
+      background: var(--accent-dim);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 14px rgba(233,69,96,.4);
+    }
+    .drop-btn:active:not(:disabled) { transform: translateY(0); }
+    .drop-btn:disabled { background: #2a2a40; color: #444; cursor: default; }
+
+    .dismiss-btn {
+      width: 100%;
+      padding: .5rem;
+      border: 1.5px solid var(--warning);
+      border-radius: 9px;
+      background: transparent;
+      color: var(--warning);
+      font-size: .78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s;
+      display: none;
+    }
+    .dismiss-btn.show { display: block; }
+    .dismiss-btn:hover { background: rgba(255,68,68,.15); }
+
+    /* ── LOG ─────────────────────────────────────────────────── */
+    .log-section {
+      background: var(--surface);
+      border-radius: 14px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .log-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .7rem 1rem;
+      cursor: pointer; user-select: none;
+      border-bottom: 1px solid transparent;
+      transition: background .15s;
+    }
+    .log-head:hover { background: rgba(255,255,255,.04); }
+    .log-head.open { border-bottom-color: #2a2a40; }
+    .log-head-title { font-size: .88rem; font-weight: 700; }
+    .log-head-caret { color: var(--muted); font-size: .78rem; }
+
+    .log-body {
+      max-height: 260px;
+      overflow-y: auto;
+      display: none;
+    }
+    .log-body.open { display: block; }
+
+    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    thead th {
+      background: #0d0d1a;
+      padding: .5rem 1rem;
+      text-align: right;
+      color: var(--muted);
+      font-weight: 600;
+      position: sticky; top: 0;
+    }
+    tbody td { padding: .45rem 1rem; border-bottom: 1px solid #1e1e30; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: rgba(255,255,255,.03); }
+
+    /* ── DIALOG ──────────────────────────────────────────────── */
+    .overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.75);
+      z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    .overlay.open { display: flex; }
+    .dialog {
+      background: var(--surface);
+      border-radius: 18px;
+      padding: 2rem 1.75rem;
+      width: 90%; max-width: 340px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,.6);
+    }
+    .dialog h3 { font-size: 1.2rem; margin-bottom: .7rem; }
+    .dialog p { color: var(--muted); font-size: .88rem; margin-bottom: 1.5rem; line-height: 1.5; }
+    .dialog-row { display: flex; gap: .75rem; justify-content: center; }
+    .btn-ok {
+      padding: .6rem 1.6rem;
+      border: none; border-radius: 10px;
+      background: var(--accent); color: #fff;
+      font-size: .95rem; font-weight: 700; cursor: pointer;
+    }
+    .btn-ok:hover { background: var(--accent-dim); }
+    .btn-cancel {
+      padding: .6rem 1.6rem;
+      border: 1.5px solid #3a3a5a; border-radius: 10px;
+      background: transparent; color: var(--text);
+      font-size: .95rem; cursor: pointer;
+    }
+    .btn-cancel:hover { background: #2a2a40; }
+
+    /* ── RESPONSIVE ──────────────────────────────────────────── */
+    @media (max-width: 480px) {
+      .players-grid { grid-template-columns: repeat(2, 1fr); gap: .5rem; }
+      .big-count { font-size: 3.4rem; }
+    }
+    @media (max-width: 320px) {
+      .players-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════ SETTINGS SCREEN ═══════════ -->
+<div id="settings-screen">
+  <div class="logo">מיכאקי</div>
+  <div class="logo-sub">ניקוד לטאקי יורד</div>
+
+  <div class="box">
+    <div class="field">
+      <span class="field-label">מספר שחקנים</span>
+      <div class="stepper">
+        <button class="step-btn" id="btn-plus">+</button>
+        <div id="count-val">2</div>
+        <button class="step-btn" id="btn-minus">−</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="field-label">שמות שחקנים</span>
+      <div class="name-list" id="name-list"></div>
+    </div>
+
+    <button class="btn-primary" id="start-btn">התחל משחק ▶</button>
+  </div>
+</div>
+
+<!-- ═══════════ GAME SCREEN ═══════════ -->
+<div id="game-screen">
+  <div class="game-header">
+    <div class="game-logo">מיכאקי</div>
+    <div class="hdr-btns">
+      <button class="btn-sm btn-new" id="new-game-btn">משחק חדש</button>
+      <button class="btn-sm btn-reset" id="reset-btn">איפוס</button>
+    </div>
+  </div>
+
+  <div class="players-grid" id="players-grid"></div>
+
+  <div class="log-section">
+    <div class="log-head" id="log-head">
+      <span class="log-head-title">יומן ירידות</span>
+      <span class="log-head-caret" id="log-caret">▼ הצג</span>
+    </div>
+    <div class="log-body" id="log-body">
+      <table>
+        <thead>
+          <tr><th>#</th><th>שחקן</th><th>קלפים שנותרו</th><th>שעה</th></tr>
+        </thead>
+        <tbody id="log-rows"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ CONFIRM DIALOG ═══════════ -->
+<div class="overlay" id="overlay">
+  <div class="dialog">
+    <h3 id="dlg-title"></h3>
+    <p id="dlg-msg"></p>
+    <div class="dialog-row">
+      <button class="btn-ok" id="dlg-ok">אישור</button>
+      <button class="btn-cancel" id="dlg-cancel">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  CONSTANTS & STATE
+// ═══════════════════════════════════════════════════════════════
+const INIT_CARDS   = 8;
+const BASE_SEC     = 3;
+const LS_KEY       = 'miKaKi_v1';
+
+let S = {
+  screen:       'settings',
+  playerCount:  2,
+  names:        ['שחקן 1', 'שחקן 2'],
+  cards:        [],      // current card count per player
+  lastDrop:     [],      // ms timestamp of last drop (null if none)
+  alertOn:      [],      // boolean – warning active?
+  finishRank:   [],      // rank when player finishes (1 = winner)
+  log:          [],      // [{ts, name, cardsLeft}]
+  logOpen:      false,
+};
+
+let finishedCount = 0;   // runtime counter (rebuilt on load)
+let pendingAction = null;
+let timerInterval = null;
+
+// ═══════════════════════════════════════════════════════════════
+//  PERSISTENCE
+// ═══════════════════════════════════════════════════════════════
+function save() { localStorage.setItem(LS_KEY, JSON.stringify(S)); }
+
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem(LS_KEY));
+    if (d && d.screen) {
+      Object.assign(S, d);
+      finishedCount = S.finishRank.filter(r => r > 0).length;
+    }
+  } catch {}
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  AUDIO
+// ═══════════════════════════════════════════════════════════════
+function beep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.22, 0.44].forEach(t => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 900;
+      osc.type = 'square';
+      gain.gain.setValueAtTime(0.28, ctx.currentTime + t);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.18);
+      osc.start(ctx.currentTime + t);
+      osc.stop(ctx.currentTime + t + 0.18);
+    });
+  } catch {}
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════════════
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function fmtElapsed(ms) {
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  const h = Math.floor(m / 60);
+  return h > 0
+    ? `${h}:${pad(m % 60)}:${pad(s % 60)}`
+    : `${m}:${pad(s % 60)}`;
+}
+
+function fmtTime(ts) {
+  const d = new Date(ts);
+  return d.toLocaleTimeString('he-IL', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SETTINGS SCREEN
+// ═══════════════════════════════════════════════════════════════
+function showSettings() {
+  document.getElementById('settings-screen').style.display = 'flex';
+  document.getElementById('game-screen').style.display    = 'none';
+  document.getElementById('count-val').textContent = S.playerCount;
+  renderNameInputs();
+}
+
+function renderNameInputs() {
+  const list = document.getElementById('name-list');
+  list.innerHTML = '';
+  for (let i = 0; i < S.playerCount; i++) {
+    const row = document.createElement('div');
+    row.className = 'name-row';
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.value = S.names[i] || `שחקן ${i+1}`;
+    inp.placeholder = `שחקן ${i+1}`;
+    inp.dataset.i = i;
+    inp.addEventListener('input', e => {
+      const idx = +e.target.dataset.i;
+      S.names[idx] = e.target.value.trim() || `שחקן ${idx+1}`;
+      save();
+    });
+    row.innerHTML = `<span class="name-num">${i+1}.</span>`;
+    row.appendChild(inp);
+    list.appendChild(row);
+  }
+}
+
+function syncNamesFromInputs() {
+  document.querySelectorAll('#name-list input').forEach((inp, i) => {
+    S.names[i] = inp.value.trim() || `שחקן ${i+1}`;
+  });
+}
+
+document.getElementById('btn-plus').addEventListener('click', () => {
+  if (S.playerCount >= 10) return;
+  S.playerCount++;
+  if (!S.names[S.playerCount - 1]) S.names[S.playerCount - 1] = `שחקן ${S.playerCount}`;
+  document.getElementById('count-val').textContent = S.playerCount;
+  renderNameInputs();
+  save();
+});
+
+document.getElementById('btn-minus').addEventListener('click', () => {
+  if (S.playerCount <= 2) return;
+  S.playerCount--;
+  document.getElementById('count-val').textContent = S.playerCount;
+  renderNameInputs();
+  save();
+});
+
+document.getElementById('start-btn').addEventListener('click', () => {
+  syncNamesFromInputs();
+  S.names = S.names.slice(0, S.playerCount);
+  initGame();
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  GAME INIT
+// ═══════════════════════════════════════════════════════════════
+function initGame() {
+  finishedCount     = 0;
+  S.cards           = Array(S.playerCount).fill(INIT_CARDS);
+  S.lastDrop        = Array(S.playerCount).fill(null);
+  S.alertOn         = Array(S.playerCount).fill(false);
+  S.finishRank      = Array(S.playerCount).fill(0);
+  S.log             = [];
+  S.screen          = 'game';
+  S.logOpen         = false;
+  save();
+  showGame();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  GAME SCREEN
+// ═══════════════════════════════════════════════════════════════
+function showGame() {
+  document.getElementById('settings-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display     = 'flex';
+  renderAllCards();
+  renderLog();
+  syncLogUI();
+  startTimer();
+}
+
+function renderAllCards() {
+  const grid = document.getElementById('players-grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < S.playerCount; i++) grid.appendChild(buildCard(i));
+}
+
+function buildCard(i) {
+  const done  = S.cards[i] === 0;
+  const alert = S.alertOn[i];
+  const rank  = S.finishRank[i];
+
+  const wrap = document.createElement('div');
+  wrap.className = 'pcard' + (alert ? ' alert' : '') + (done ? ' finished' : '');
+  wrap.id = `pcard-${i}`;
+
+  // Name + optional rank badge
+  const nameLine = document.createElement('div');
+  nameLine.style.display = 'flex'; nameLine.style.alignItems = 'center'; nameLine.style.gap = '.4rem';
+  const nameEl = document.createElement('div');
+  nameEl.className = 'pcard-name';
+  nameEl.textContent = S.names[i];
+  nameLine.appendChild(nameEl);
+  if (done && rank > 0) {
+    const badge = document.createElement('span');
+    badge.className = 'rank-badge';
+    badge.textContent = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+    nameLine.appendChild(badge);
+  }
+  wrap.appendChild(nameLine);
+
+  // Big number / done icon
+  const countEl = document.createElement('div');
+  if (done) {
+    countEl.className = 'big-count done-icon';
+    countEl.textContent = 'סיים! 🏆';
+  } else {
+    countEl.className = 'big-count' + (S.cards[i] <= 2 ? ' hot' : '');
+    countEl.textContent = S.cards[i];
+  }
+  countEl.id = `count-${i}`;
+  wrap.appendChild(countEl);
+
+  // Timer label
+  const timerEl = document.createElement('div');
+  timerEl.className = 'timer-lbl';
+  timerEl.id = `timer-${i}`;
+  if (!done && S.lastDrop[i] !== null) {
+    timerEl.textContent = '⏱ ' + fmtElapsed(Date.now() - S.lastDrop[i]);
+  }
+  wrap.appendChild(timerEl);
+
+  // Drop button
+  const dropBtn = document.createElement('button');
+  dropBtn.className = 'drop-btn';
+  dropBtn.id = `drop-${i}`;
+  dropBtn.disabled = done;
+  dropBtn.textContent = done ? 'סיים! ✓' : 'ירד! 🎴';
+  dropBtn.addEventListener('click', () => handleDrop(i));
+  wrap.appendChild(dropBtn);
+
+  // Dismiss button
+  const dismissBtn = document.createElement('button');
+  dismissBtn.className = 'dismiss-btn' + (alert ? ' show' : '');
+  dismissBtn.id = `dismiss-${i}`;
+  dismissBtn.textContent = 'אישור - זה נכון ✓';
+  dismissBtn.addEventListener('click', () => handleDismiss(i));
+  wrap.appendChild(dismissBtn);
+
+  return wrap;
+}
+
+function refreshCard(i) {
+  const old = document.getElementById(`pcard-${i}`);
+  if (old) old.replaceWith(buildCard(i));
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DROP LOGIC
+// ═══════════════════════════════════════════════════════════════
+function handleDrop(i) {
+  if (S.cards[i] <= 0) return;
+
+  const now      = Date.now();
+  const curCards = S.cards[i];  // count BEFORE decrement
+  const thresh   = curCards * S.playerCount * BASE_SEC * 1000;
+
+  // warning check
+  let tooFast = false;
+  if (S.lastDrop[i] !== null && (now - S.lastDrop[i]) < thresh) {
+    tooFast = true;
+  }
+
+  // decrement
+  S.cards[i]--;
+  S.lastDrop[i] = now;
+
+  // finish?
+  if (S.cards[i] === 0) {
+    finishedCount++;
+    S.finishRank[i] = finishedCount;
+  }
+
+  // warning
+  if (tooFast) {
+    S.alertOn[i] = true;
+    beep();
+  }
+
+  // log (newest first)
+  S.log.unshift({ ts: now, name: S.names[i], cardsLeft: S.cards[i] });
+
+  save();
+  refreshCard(i);
+  renderLog();
+}
+
+function handleDismiss(i) {
+  S.alertOn[i] = false;
+  save();
+  refreshCard(i);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TIMER
+// ═══════════════════════════════════════════════════════════════
+function startTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    if (S.screen !== 'game') return;
+    const now = Date.now();
+    for (let i = 0; i < S.playerCount; i++) {
+      if (S.cards[i] > 0 && S.lastDrop[i] !== null) {
+        const el = document.getElementById(`timer-${i}`);
+        if (el) el.textContent = '⏱ ' + fmtElapsed(now - S.lastDrop[i]);
+      }
+    }
+  }, 1000);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  LOG
+// ═══════════════════════════════════════════════════════════════
+function renderLog() {
+  const tbody = document.getElementById('log-rows');
+  tbody.innerHTML = '';
+  S.log.forEach((e, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${S.log.length - idx}</td>
+      <td>${e.name}</td>
+      <td>${e.cardsLeft}</td>
+      <td>${fmtTime(e.ts)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function syncLogUI() {
+  const body  = document.getElementById('log-body');
+  const caret = document.getElementById('log-caret');
+  const head  = document.getElementById('log-head');
+  if (S.logOpen) {
+    body.classList.add('open');
+    head.classList.add('open');
+    caret.textContent = '▲ הסתר';
+  } else {
+    body.classList.remove('open');
+    head.classList.remove('open');
+    caret.textContent = '▼ הצג';
+  }
+}
+
+document.getElementById('log-head').addEventListener('click', () => {
+  S.logOpen = !S.logOpen;
+  save();
+  syncLogUI();
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  NEW GAME / RESET
+// ═══════════════════════════════════════════════════════════════
+function showDialog(title, msg, action) {
+  pendingAction = action;
+  document.getElementById('dlg-title').textContent = title;
+  document.getElementById('dlg-msg').textContent   = msg;
+  document.getElementById('overlay').classList.add('open');
+}
+
+document.getElementById('new-game-btn').addEventListener('click', () => {
+  showDialog('משחק חדש', 'להתחיל משחק חדש עם אותם שחקנים?', 'newgame');
+});
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+  showDialog('איפוס', 'לאפס לברירת מחדל: 2 שחקנים, שחקן 1 ו-שחקן 2?', 'reset');
+});
+
+document.getElementById('dlg-ok').addEventListener('click', () => {
+  document.getElementById('overlay').classList.remove('open');
+  if (pendingAction === 'newgame') {
+    initGame();
+  } else if (pendingAction === 'reset') {
+    S.playerCount = 2;
+    S.names       = ['שחקן 1', 'שחקן 2'];
+    S.screen      = 'settings';
+    save();
+    showSettings();
+  }
+  pendingAction = null;
+});
+
+document.getElementById('dlg-cancel').addEventListener('click', () => {
+  document.getElementById('overlay').classList.remove('open');
+  pendingAction = null;
+});
+
+// Close dialog on backdrop click
+document.getElementById('overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('overlay')) {
+    document.getElementById('overlay').classList.remove('open');
+    pendingAction = null;
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════
+load();
+if (S.screen === 'game') {
+  showGame();
+} else {
+  showSettings();
+}
+</script>
+</body>
+</html>
