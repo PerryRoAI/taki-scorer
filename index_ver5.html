@@ -245,13 +245,13 @@
     }
 
     .pcard-name {
-      font-size: 1.25rem; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+      font-size: .82rem; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
       color: var(--text-dim); text-align: center;
       max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
 
     .rank-label {
-      font-size: 1.15rem; font-weight: 800; padding: .2rem .7rem;
+      font-size: .78rem; font-weight: 800; padding: .2rem .7rem;
       border-radius: 999px; background: linear-gradient(135deg, var(--gold), #ff9800);
       color: #000; letter-spacing: .3px; text-align: center; line-height: 1.4;
     }
@@ -281,7 +281,7 @@
     }
 
     .timer-lbl {
-      font-size: 1.1rem; font-weight: 600; color: var(--timer);
+      font-size: .72rem; font-weight: 600; color: var(--timer);
       font-variant-numeric: tabular-nums; letter-spacing: .5px; min-height: 1em; opacity: .85;
     }
 
@@ -290,7 +290,7 @@
       width: 100%; padding: .9rem;
       border: none; border-radius: var(--radius-btn);
       background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
-      color: #fff; font-size: 1.35rem; font-weight: 800;
+      color: #fff; font-size: 1.05rem; font-weight: 800;
       cursor: pointer; transition: all .18s; margin-top: .3rem;
       box-shadow: 0 3px 12px var(--accent-glow); letter-spacing: .3px;
       position: relative; overflow: hidden;
@@ -391,22 +391,6 @@
     }
     .btn-cancel:hover { background: var(--glass-hover); }
 
-    /* ── GAME OVER BANNER ────────────────────────────────────── */
-    .game-over-banner {
-      display: none;
-      width: 100%; margin-bottom: .85rem;
-      padding: 1rem 1.25rem;
-      border-radius: 16px;
-      background: linear-gradient(135deg, rgba(255,59,111,0.25), rgba(255,107,53,0.2));
-      border: 1px solid rgba(255,59,111,0.5);
-      box-shadow: 0 0 24px rgba(255,59,111,0.3);
-      text-align: center;
-      font-size: 1.15rem; font-weight: 800;
-      color: #fff;
-      animation: dlgIn .3s ease;
-    }
-    .game-over-banner.show { display: block; }
-
     /* ── RESPONSIVE ──────────────────────────────────────────── */
     @media (max-width: 480px) {
       .players-grid { grid-template-columns: repeat(2, 1fr); gap: .55rem; }
@@ -425,7 +409,7 @@
   <img src="LOGO.png" class="logo-img" alt="מיכאקי"
        onerror="this.style.display='none';document.getElementById('logo-fb').style.display='block'">
   <div id="logo-fb" class="logo-fallback" style="display:none">מיכאקי</div>
-
+  <div class="logo-sub">ניקוד לטאקי יורד</div>
 
   <div class="glass-panel settings-box">
     <div class="field">
@@ -458,7 +442,6 @@
     </div>
   </div>
 
-  <div class="game-over-banner" id="game-over-banner">המשחק הסתיים! נותר שחקן אחד שלא סיים</div>
   <div class="players-grid" id="players-grid"></div>
 
   <div class="log-section">
@@ -494,7 +477,7 @@
 //  CONSTANTS & STATE
 // ═══════════════════════════════════════════════════════════════
 const INIT_CARDS = 8;
-const BASE_SEC   = 1.5;
+const BASE_SEC   = 3;
 const LS_KEY     = 'miKaKi_v1';
 
 const RANK_HE = [
@@ -762,8 +745,6 @@ function initGame() {
 function showGame() {
   document.getElementById('settings-screen').style.display = 'none';
   document.getElementById('game-screen').style.display     = 'flex';
-  const banner = document.getElementById('game-over-banner');
-  if (banner) banner.classList.remove('show');
   renderAllCards();
   renderLog();
   syncLogUI();
@@ -827,11 +808,8 @@ function buildCard(i) {
   dropBtn.className   = 'drop-btn';
   dropBtn.id          = `drop-${i}`;
   dropBtn.disabled    = done || alert;
-  dropBtn.textContent = done ? 'סיים ✓' : 'ירדתי!';
-  dropBtn.addEventListener('click', () => {
-    if (navigator.vibrate) navigator.vibrate(50);
-    handleDrop(i);
-  });
+  dropBtn.textContent = done ? 'סיים ✓' : 'ירד! 🎴';
+  dropBtn.addEventListener('click', () => handleDrop(i));
   wrap.appendChild(dropBtn);
 
   // Warning action buttons (confirm + cancel) — visible only when pending
@@ -910,10 +888,6 @@ function commitDrop(i) {
     finishedCount++;
     S.finishRank[i] = finishedCount;
     playVictory();
-    if (finishedCount === S.playerCount - 1) {
-      const banner = document.getElementById('game-over-banner');
-      if (banner) banner.classList.add('show');
-    }
   } else {
     playDropSound();
   }
