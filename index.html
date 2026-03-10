@@ -407,6 +407,107 @@
     }
     .game-over-banner.show { display: block; }
 
+    /* ── SETTINGS PANEL ─────────────────────────────────────── */
+    .btn-gear {
+      background: none; border: none; cursor: pointer;
+      font-size: 1.1rem; padding: .2rem .4rem; border-radius: 8px;
+      color: var(--muted); transition: all .18s; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .btn-gear:hover { background: var(--glass-hover); color: var(--text); transform: rotate(35deg); }
+
+    .sett-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
+      z-index: 300; align-items: flex-end; justify-content: center;
+    }
+    .sett-overlay.open { display: flex; }
+
+    .sett-panel {
+      background: linear-gradient(160deg, #12123a 0%, #0d0d24 100%);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px 24px 0 0;
+      width: 100%; max-width: 520px;
+      max-height: 88vh; overflow-y: auto;
+      padding: 1.5rem 1.5rem 2.5rem;
+      box-shadow: 0 -8px 40px rgba(0,0,0,0.6);
+      animation: slideUp .25s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .sett-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.4rem;
+    }
+    .sett-title { font-size: 1.15rem; font-weight: 800; }
+    .sett-close {
+      background: rgba(255,255,255,0.07); border: 1px solid var(--glass-border);
+      border-radius: 50%; width: 34px; height: 34px; cursor: pointer;
+      color: var(--text); font-size: 1rem; display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+    }
+    .sett-close:hover { background: rgba(255,255,255,0.15); }
+
+    .sett-section-title {
+      font-size: .68rem; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: .6rem; margin-top: 1.2rem;
+    }
+
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .75rem 0; border-bottom: 1px solid var(--glass-border);
+    }
+    .toggle-label { font-size: .97rem; font-weight: 600; }
+
+    .tog { position: relative; width: 50px; height: 28px; flex-shrink: 0; }
+    .tog input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .tog-slider {
+      position: absolute; inset: 0;
+      background: rgba(255,255,255,0.14); border-radius: 28px;
+      cursor: pointer; transition: background .2s;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .tog-slider::before {
+      content: ''; position: absolute;
+      width: 20px; height: 20px; left: 3px; top: 3px;
+      background: #fff; border-radius: 50%;
+      transition: transform .2s; box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    }
+    .tog input:checked + .tog-slider { background: var(--accent); border-color: var(--accent); }
+    .tog input:checked + .tog-slider::before { transform: translateX(22px); }
+
+    .undo-btn {
+      width: 100%; padding: .85rem;
+      border: 1px solid rgba(61,90,254,0.4); border-radius: var(--radius-btn);
+      background: rgba(61,90,254,0.12); color: var(--text);
+      font-size: 1rem; font-weight: 800; cursor: pointer;
+      transition: all .15s; margin-top: .5rem; letter-spacing: .2px;
+    }
+    .undo-btn:hover:not(:disabled) { background: rgba(61,90,254,0.26); border-color: rgba(61,90,254,0.7); transform: translateY(-1px); }
+    .undo-btn:disabled { opacity: .32; cursor: default; transform: none; }
+
+    .about-section {
+      margin-top: 1.6rem; padding-top: 1.3rem;
+      border-top: 1px solid var(--glass-border);
+      display: flex; flex-direction: column; align-items: center; gap: .85rem;
+    }
+    .about-text {
+      font-size: .88rem; line-height: 1.75; color: var(--text-dim);
+      text-align: center;
+    }
+    .about-link {
+      display: inline-block; padding: .5rem 1.2rem;
+      border: 1px solid rgba(61,90,254,0.45); border-radius: 10px;
+      background: rgba(61,90,254,0.1); color: #8fa8ff;
+      font-size: .9rem; font-weight: 700; text-decoration: none;
+      transition: all .15s;
+    }
+    .about-link:hover { background: rgba(61,90,254,0.24); border-color: rgba(61,90,254,0.75); color: #fff; }
+    .about-version {
+      font-size: .76rem; color: rgba(255,255,255,0.25); text-align: center; line-height: 1.8;
+    }
+
     /* ── RESPONSIVE ──────────────────────────────────────────── */
     @media (max-width: 480px) {
       .players-grid { grid-template-columns: repeat(2, 1fr); gap: .55rem; }
@@ -464,7 +565,10 @@
   <div class="log-section">
     <div class="log-head" id="log-head">
       <span class="log-head-title">יומן ירידות</span>
-      <span class="log-head-caret" id="log-caret">▼ הצג</span>
+      <div style="display:flex;align-items:center;gap:.5rem;">
+        <button class="btn-gear" id="settings-btn" title="הגדרות">⚙️</button>
+        <span class="log-head-caret" id="log-caret">▼ הצג</span>
+      </div>
     </div>
     <div class="log-body" id="log-body">
       <table>
@@ -473,6 +577,36 @@
         </thead>
         <tbody id="log-rows"></tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ SETTINGS PANEL ═══════════ -->
+<div class="sett-overlay" id="sett-overlay">
+  <div class="sett-panel">
+    <div class="sett-hdr">
+      <span class="sett-title">⚙️ הגדרות</span>
+      <button class="sett-close" id="sett-close">✕</button>
+    </div>
+
+    <div class="sett-section-title">🔊 צלילים</div>
+    <div class="toggle-row">
+      <span class="toggle-label">🎵 שיר פתיחה</span>
+      <label class="tog"><input type="checkbox" id="tog-intro"><span class="tog-slider"></span></label>
+    </div>
+    <div class="toggle-row" style="border-bottom:none">
+      <span class="toggle-label">🔊 כל הצלילים</span>
+      <label class="tog"><input type="checkbox" id="tog-sounds"><span class="tog-slider"></span></label>
+    </div>
+
+    <div class="sett-section-title">↩ ביטול</div>
+    <button class="undo-btn" id="undo-btn" disabled>↩ בטל ירידה אחרונה</button>
+
+    <div class="about-section">
+      <p class="about-text">אפליקציה זו מוקדשת באהבה ענקית למיכל שלי, השותפה המושלמת לשעות ארוכות ומהנות של משחקי טאקי. תודה על כל רגע של משחק וצחוק. ❤️</p>
+      <a class="about-link" href="https://gamelagan.co.il/%D7%94%D7%95%D7%A8%D7%90%D7%95%D7%AA-%D7%9E%D7%A9%D7%97%D7%A7-%D7%98%D7%90%D7%A7%D7%99-%D7%97%D7%99%D7%99%D7%9D-%D7%A9%D7%A4%D7%99%D7%A8/" target="_blank" rel="noopener">הוראות משחק טאקי</a>
+      <p class="about-text">תודה מיוחדת לחיים שפיר – ממציא משחק הטאקי! 🃏</p>
+      <div class="about-version">גרסה v2.0.0<br>© PerryRoAI מקבוצת PerryProAI</div>
     </div>
   </div>
 </div>
@@ -493,9 +627,14 @@
 // ═══════════════════════════════════════════════════════════════
 //  CONSTANTS & STATE
 // ═══════════════════════════════════════════════════════════════
-const INIT_CARDS = 8;
-const BASE_SEC   = 1.5;
-const LS_KEY     = 'miKaKi_v1';
+const INIT_CARDS  = 8;
+const BASE_SEC    = 1.5;
+const LS_KEY      = 'miKaKi_v1';
+const LS_INTRO    = 'miKaKi_introSong';
+const LS_SOUNDS   = 'miKaKi_sounds';
+
+let introSongEnabled = localStorage.getItem(LS_INTRO)  !== 'false';
+let allSoundsEnabled = localStorage.getItem(LS_SOUNDS) !== 'false';
 
 const RANK_HE = [
   'מקום ראשון 🥇', 'מקום שני 🥈', 'מקום שלישי 🥉',
@@ -563,6 +702,7 @@ function playNote(ctx, freq, t, dur, vol = 0.28, type = 'sine') {
 
 // ── Warning beep: three sharp blips ──────────────────────────
 function beep() {
+  if (!allSoundsEnabled) return;
   try {
     const ctx = getCtx(), t = ctx.currentTime;
     [0, 0.22, 0.44].forEach(d => playNote(ctx, 900, t + d, 0.17, 0.28, 'square'));
@@ -571,6 +711,7 @@ function beep() {
 
 // ── Drop sound: punchy descending swoosh + low thud ──────────
 function playDropSound() {
+  if (!allSoundsEnabled) return;
   try {
     const ctx = getCtx(), t = ctx.currentTime;
 
@@ -605,6 +746,7 @@ function playDropSound() {
 // ── Victory: Michaki_Groove.mp3, fallback to Web Audio ───────
 // -- Victory fanfare: Web Audio only (works on mobile too) ----
 function playVictory() {
+  if (!allSoundsEnabled) return;
   try {
     const ctx = getCtx(), t = ctx.currentTime;
     const notes = [
@@ -626,6 +768,7 @@ function playVictory() {
 let _grooveAudio = null;
 
 function playGroove() {
+  if (!introSongEnabled || !allSoundsEnabled) return;
   try {
     if (_grooveAudio) { _grooveAudio.pause(); _grooveAudio.currentTime = 0; }
     _grooveAudio = new Audio('Michaki_Groove.mp3');
@@ -900,7 +1043,8 @@ function handleCancelDrop(i) {
 
 // Write the drop into state, play sound, update UI
 function commitDrop(i) {
-  const now = Date.now();
+  const now         = Date.now();
+  const prevLastDrop = S.lastDrop[i];
   S.cards[i]--;
   S.lastDrop[i]    = now;
   S.alertOn[i]     = false;
@@ -918,7 +1062,7 @@ function commitDrop(i) {
     playDropSound();
   }
 
-  S.log.unshift({ ts: now, name: S.names[i], cardsLeft: S.cards[i] });
+  S.log.unshift({ ts: now, name: S.names[i], cardsLeft: S.cards[i], playerIdx: i, prevLastDrop });
   save();
   refreshCard(i);
   renderLog();
@@ -1014,9 +1158,85 @@ document.getElementById('overlay').addEventListener('click', e => {
 });
 
 // ═══════════════════════════════════════════════════════════════
+//  SETTINGS PANEL
+// ═══════════════════════════════════════════════════════════════
+function openSettingsPanel() {
+  updateUndoBtn();
+  document.getElementById('sett-overlay').classList.add('open');
+}
+
+function closeSettingsPanel() {
+  document.getElementById('sett-overlay').classList.remove('open');
+}
+
+function updateUndoBtn() {
+  const btn = document.getElementById('undo-btn');
+  if (!btn) return;
+  btn.disabled = !(S.log.length > 0 && S.log[0].playerIdx !== undefined);
+}
+
+function undoLastDrop() {
+  if (!S.log.length) return;
+  const entry = S.log[0];
+  if (entry.playerIdx === undefined) return;
+
+  const i         = entry.playerIdx;
+  const wasFinish = entry.cardsLeft === 0;
+
+  S.cards[i]       = entry.cardsLeft + 1;
+  S.lastDrop[i]    = entry.prevLastDrop !== undefined ? entry.prevLastDrop : null;
+  S.alertOn[i]     = false;
+  S.pendingDrop[i] = false;
+
+  if (wasFinish) {
+    S.finishRank[i] = 0;
+    finishedCount--;
+    if (finishedCount < S.playerCount - 1) {
+      const banner = document.getElementById('game-over-banner');
+      if (banner) banner.classList.remove('show');
+    }
+  }
+
+  S.log.shift();
+  save();
+  refreshCard(i);
+  renderLog();
+  updateUndoBtn();
+}
+
+document.getElementById('settings-btn').addEventListener('click', e => {
+  e.stopPropagation();
+  openSettingsPanel();
+});
+
+document.getElementById('sett-close').addEventListener('click', closeSettingsPanel);
+
+document.getElementById('sett-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('sett-overlay')) closeSettingsPanel();
+});
+
+document.getElementById('tog-intro').addEventListener('change', e => {
+  introSongEnabled = e.target.checked;
+  localStorage.setItem(LS_INTRO, introSongEnabled);
+});
+
+document.getElementById('tog-sounds').addEventListener('change', e => {
+  allSoundsEnabled = e.target.checked;
+  localStorage.setItem(LS_SOUNDS, allSoundsEnabled);
+});
+
+document.getElementById('undo-btn').addEventListener('click', undoLastDrop);
+
+function initSettingsUI() {
+  document.getElementById('tog-intro').checked  = introSongEnabled;
+  document.getElementById('tog-sounds').checked = allSoundsEnabled;
+}
+
+// ═══════════════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════════════
 load();
+initSettingsUI();
 scheduleIntro();
 if (S.screen === 'game') showGame(); else showSettings();
 </script>
