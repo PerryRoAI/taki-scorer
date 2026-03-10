@@ -776,13 +776,10 @@ function playUndoSound() {
   } catch {}
 }
 
-// -- Victory fanfare: dramatic fanfare + applause + speech ----
-function playVictory() {
-  if (!allSoundsEnabled) return;
+// -- Victory fallback: Web Audio fanfare if MP3 unavailable --
+function playVictoryFallback() {
   try {
     const ctx = getCtx(), t = ctx.currentTime;
-
-    // Loud sawtooth fanfare: C5 → E5 → G5 → C6
     const fanfare = [
       { f: 523.25, d: 0,    l: 0.18 },
       { f: 659.25, d: 0.20, l: 0.18 },
@@ -799,50 +796,36 @@ function playVictory() {
       gain.gain.linearRampToValueAtTime(0.8, t + n.d + 0.02);
       gain.gain.exponentialRampToValueAtTime(0.001, t + n.d + n.l);
       osc.start(t + n.d); osc.stop(t + n.d + n.l + 0.05);
-      // Harmonic layer
-      const osc2  = ctx.createOscillator();
-      const gain2 = ctx.createGain();
-      osc2.connect(gain2); gain2.connect(ctx.destination);
-      osc2.type = 'triangle';
-      osc2.frequency.setValueAtTime(n.f * 2, t + n.d);
-      gain2.gain.setValueAtTime(0, t + n.d);
-      gain2.gain.linearRampToValueAtTime(0.25, t + n.d + 0.02);
-      gain2.gain.exponentialRampToValueAtTime(0.001, t + n.d + n.l);
-      osc2.start(t + n.d); osc2.stop(t + n.d + n.l + 0.05);
     });
-
-    // Dense applause starting 1 second in: 20 bursts over 5 seconds
-    for (let b = 0; b < 20; b++) {
-      const bufLen = Math.floor(ctx.sampleRate * (0.10 + Math.random() * 0.08));
-      const buf    = ctx.createBuffer(1, bufLen, ctx.sampleRate);
-      const data   = buf.getChannelData(0);
-      for (let s = 0; s < data.length; s++) data[s] = (Math.random() * 2 - 1);
-      const src  = ctx.createBufferSource();
-      const gain = ctx.createGain();
-      const filt = ctx.createBiquadFilter();
-      filt.type = 'bandpass';
-      filt.frequency.value = 800 + Math.random() * 1000;
-      filt.Q.value = 0.55;
-      src.buffer = buf;
-      src.connect(filt); filt.connect(gain); gain.connect(ctx.destination);
-      const onset   = t + 1.0 + b * 0.22 + Math.random() * 0.06;
-      const fadeOut = Math.max(0.001, 0.6 - b * 0.022);   // slow fade over 5 s
-      gain.gain.setValueAtTime(0, onset);
-      gain.gain.linearRampToValueAtTime(0.6, onset + 0.03);
-      gain.gain.exponentialRampToValueAtTime(fadeOut < 0.01 ? 0.001 : fadeOut, onset + 0.35);
-      src.start(onset); src.stop(onset + 0.45);
-    }
   } catch {}
+}
 
-  // Speech: slightly before applause
+// -- Victory: applause MP3 for all finishers, speech for 1st --
+function playVictory(rank) {
+  if (!allSoundsEnabled) return;
+
+  // Applause MP3 for every finishing position
   try {
-    const utt  = new SpeechSynthesisUtterance('We have a winner!!!!');
-    utt.lang   = 'en-US';
-    utt.pitch  = 1.4;
-    utt.rate   = 0.8;
-    utt.volume = 1;
-    setTimeout(() => speechSynthesis.speak(utt), 700);
-  } catch {}
+    const applause = new Audio('sound012-crowcrowd-applause-461678.mp3');
+    applause.volume = 0.9;
+    applause.onerror = () => playVictoryFallback();
+    const p = applause.play();
+    if (p !== undefined) p.catch(() => playVictoryFallback());
+  } catch {
+    playVictoryFallback();
+  }
+
+  // Speech only for 1st place
+  if (rank === 1) {
+    try {
+      const utt  = new SpeechSynthesisUtterance('We have a winner!!!!');
+      utt.lang   = 'en-US';
+      utt.pitch  = 1.4;
+      utt.rate   = 0.8;
+      utt.volume = 1;
+      setTimeout(() => speechSynthesis.speak(utt), 700);
+    } catch {}
+  }
 }
 
 // -- Michaki Groove mp3: app-load / new-game / reset ----------
@@ -1141,7 +1124,7 @@ function commitDrop(i) {
     if (finishedCount === 1) {
       addTourneyEntry(S.gameCount, S.names[i]);
     }
-    playVictory();
+    playVictory(finishedCount);
     if (finishedCount === S.playerCount - 1) {
       S.gameOver = true;
       const lastIdx = S.finishRank.findIndex(r => r === 0);
