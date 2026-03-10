@@ -579,6 +579,19 @@
       </table>
     </div>
   </div>
+
+  <div class="log-section" style="margin-top:.6rem">
+    <div class="log-head" id="tourney-head">
+      <span class="log-head-title">🏆 לוג טורניר — מנצחים</span>
+      <span class="log-head-caret" id="tourney-caret">▼ הצג</span>
+    </div>
+    <div class="log-body" id="tourney-body">
+      <table>
+        <thead><tr><th>משחק</th><th>מנצח</th><th>שעה</th></tr></thead>
+        <tbody id="tourney-rows"></tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════ SETTINGS PANEL ═══════════ -->
@@ -611,6 +624,19 @@
   </div>
 </div>
 
+<!-- ═══════════ PREGAME SCREEN ═══════════ -->
+<div id="pregame-screen" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem 1rem;">
+  <img src="LOGO.png" class="logo-img" alt="מיכאקי" onerror="this.style.display='none'">
+  <div class="glass-panel settings-box" style="margin-top:1rem">
+    <div class="field">
+      <span class="field-label">שחקנים במשחק הבא</span>
+      <div class="name-list" id="pregame-name-list"></div>
+    </div>
+    <button class="btn-sm btn-new" id="pregame-add-btn" style="width:100%;padding:.65rem;margin-bottom:.75rem;font-size:.9rem">+ הוסף שחקן</button>
+    <button class="btn-primary" id="pregame-start-btn">התחל משחק! 🎴</button>
+  </div>
+</div>
+
 <!-- ═══════════ CONFIRM DIALOG (new game / reset) ═══════════ -->
 <div class="overlay" id="overlay">
   <div class="dialog">
@@ -632,6 +658,7 @@ const BASE_SEC    = 1.5;
 const LS_KEY      = 'miKaKi_v1';
 const LS_INTRO    = 'miKaKi_introSong';
 const LS_SOUNDS   = 'miKaKi_sounds';
+const LS_TOURNEY  = 'miKaKi_tourney';
 
 let introSongEnabled = localStorage.getItem(LS_INTRO)  !== 'false';
 let allSoundsEnabled = localStorage.getItem(LS_SOUNDS) !== 'false';
@@ -653,6 +680,8 @@ let S = {
   finishRank:  [],
   log:         [],
   logOpen:     false,
+  gameOver:    false,
+  gameCount:   0,
 };
 
 let finishedCount = 0;
@@ -743,24 +772,34 @@ function playDropSound() {
   } catch {}
 }
 
-// ── Victory: Michaki_Groove.mp3, fallback to Web Audio ───────
-// -- Victory fanfare: Web Audio only (works on mobile too) ----
+// ── Victory: Applause noise bursts + speech synthesis ────────
 function playVictory() {
   if (!allSoundsEnabled) return;
+  // Applause: layered noise bursts
   try {
     const ctx = getCtx(), t = ctx.currentTime;
-    const notes = [
-      { f: 392.00, d: 0,    l: 0.14 },
-      { f: 523.25, d: 0.16, l: 0.14 },
-      { f: 659.25, d: 0.32, l: 0.14 },
-      { f: 783.99, d: 0.48, l: 0.14 },
-      { f: 1046.5, d: 0.64, l: 0.55 },
-    ];
-    notes.forEach(n => {
-      playNote(ctx, n.f,     t + n.d, n.l, 0.32, 'triangle');
-      playNote(ctx, n.f * 2, t + n.d, n.l * 0.7, 0.08, 'sine');
-    });
-    playNote(ctx, 1318.5, t + 0.68, 0.45, 0.06, 'sine');
+    for (let b = 0; b < 8; b++) {
+      const buf  = ctx.createBuffer(1, ctx.sampleRate * 0.12, ctx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let s = 0; s < data.length; s++) data[s] = (Math.random() * 2 - 1);
+      const src  = ctx.createBufferSource();
+      const gain = ctx.createGain();
+      const filt = ctx.createBiquadFilter();
+      filt.type = 'bandpass'; filt.frequency.value = 1200; filt.Q.value = 0.8;
+      src.buffer = buf;
+      src.connect(filt); filt.connect(gain); gain.connect(ctx.destination);
+      const onset = t + b * 0.32;
+      gain.gain.setValueAtTime(0, onset);
+      gain.gain.linearRampToValueAtTime(0.35, onset + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, onset + 0.28);
+      src.start(onset); src.stop(onset + 0.32);
+    }
+  } catch {}
+  // Speech synthesis
+  try {
+    const utt = new SpeechSynthesisUtterance('We have a winner!');
+    utt.lang  = 'en-US'; utt.pitch = 1.2; utt.rate = 0.9; utt.volume = 1;
+    setTimeout(() => speechSynthesis.speak(utt), 400);
   } catch {}
 }
 
@@ -824,8 +863,9 @@ function rankLabel(rank) {
 //  SETTINGS SCREEN
 // ═══════════════════════════════════════════════════════════════
 function showSettings() {
-  document.getElementById('settings-screen').style.display = 'flex';
-  document.getElementById('game-screen').style.display    = 'none';
+  document.getElementById('settings-screen').style.display  = 'flex';
+  document.getElementById('game-screen').style.display      = 'none';
+  document.getElementById('pregame-screen').style.display   = 'none';
   document.getElementById('count-val').textContent = S.playerCount;
   renderNameInputs();
 }
@@ -887,6 +927,8 @@ document.getElementById('start-btn').addEventListener('click', () => {
 // ═══════════════════════════════════════════════════════════════
 function initGame() {
   finishedCount    = 0;
+  S.gameCount      = (S.gameCount || 0) + 1;
+  S.gameOver       = false;
   S.cards          = Array(S.playerCount).fill(INIT_CARDS);
   S.lastDrop       = Array(S.playerCount).fill(null);
   S.alertOn        = Array(S.playerCount).fill(false);
@@ -903,13 +945,19 @@ function initGame() {
 //  GAME SCREEN
 // ═══════════════════════════════════════════════════════════════
 function showGame() {
-  document.getElementById('settings-screen').style.display = 'none';
-  document.getElementById('game-screen').style.display     = 'flex';
+  document.getElementById('settings-screen').style.display  = 'none';
+  document.getElementById('pregame-screen').style.display   = 'none';
+  document.getElementById('game-screen').style.display      = 'flex';
   const banner = document.getElementById('game-over-banner');
-  if (banner) banner.classList.remove('show');
+  if (banner) {
+    if (S.gameOver) banner.classList.add('show');
+    else banner.classList.remove('show');
+  }
   renderAllCards();
   renderLog();
   syncLogUI();
+  renderTourneyLog();
+  syncTourneyUI();
   startTimer();
 }
 
@@ -969,10 +1017,10 @@ function buildCard(i) {
   const dropBtn = document.createElement('button');
   dropBtn.className   = 'drop-btn';
   dropBtn.id          = `drop-${i}`;
-  dropBtn.disabled    = done || alert;
+  dropBtn.disabled    = done || alert || S.gameOver;
   dropBtn.textContent = done ? 'סיים ✓' : 'ירדתי!';
   dropBtn.addEventListener('click', () => {
-    if (navigator.vibrate) navigator.vibrate(50);
+    if (allSoundsEnabled && navigator.vibrate) navigator.vibrate(50);
     handleDrop(i);
   });
   wrap.appendChild(dropBtn);
@@ -1053,8 +1101,12 @@ function commitDrop(i) {
   if (S.cards[i] === 0) {
     finishedCount++;
     S.finishRank[i] = finishedCount;
+    if (finishedCount === 1) {
+      addTourneyEntry(S.gameCount, S.names[i]);
+    }
     playVictory();
     if (finishedCount === S.playerCount - 1) {
+      S.gameOver = true;
       const banner = document.getElementById('game-over-banner');
       if (banner) banner.classList.add('show');
     }
@@ -1064,7 +1116,11 @@ function commitDrop(i) {
 
   S.log.unshift({ ts: now, name: S.names[i], cardsLeft: S.cards[i], playerIdx: i, prevLastDrop });
   save();
-  refreshCard(i);
+  if (S.gameOver) {
+    for (let j = 0; j < S.playerCount; j++) refreshCard(j);
+  } else {
+    refreshCard(i);
+  }
   renderLog();
 }
 
@@ -1114,6 +1170,61 @@ document.getElementById('log-head').addEventListener('click', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════
+//  TOURNAMENT LOG
+// ═══════════════════════════════════════════════════════════════
+let tourneyOpen = false;
+
+function loadTourneyLog() {
+  try {
+    const d = JSON.parse(localStorage.getItem(LS_TOURNEY));
+    return Array.isArray(d) ? d : [];
+  } catch { return []; }
+}
+
+function saveTourneyLog(log) {
+  localStorage.setItem(LS_TOURNEY, JSON.stringify(log));
+}
+
+function addTourneyEntry(gameCount, winnerName) {
+  const log = loadTourneyLog();
+  log.push({ gameNum: gameCount, winner: winnerName, ts: Date.now() });
+  saveTourneyLog(log);
+  renderTourneyLog();
+}
+
+function clearTourneyLog() {
+  saveTourneyLog([]);
+  renderTourneyLog();
+}
+
+function renderTourneyLog() {
+  const tbody = document.getElementById('tourney-rows');
+  if (!tbody) return;
+  const log = loadTourneyLog();
+  tbody.innerHTML = '';
+  log.slice().reverse().forEach(e => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${e.gameNum}</td><td>${e.winner}</td><td>${fmtTime(e.ts)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function syncTourneyUI() {
+  const body  = document.getElementById('tourney-body');
+  const caret = document.getElementById('tourney-caret');
+  const head  = document.getElementById('tourney-head');
+  if (!body) return;
+  body.className  = 'log-body'  + (tourneyOpen ? ' open' : '');
+  head.className  = 'log-head'  + (tourneyOpen ? ' open' : '');
+  caret.textContent = tourneyOpen ? '▲ הסתר' : '▼ הצג';
+}
+
+document.getElementById('tourney-head').addEventListener('click', () => {
+  tourneyOpen = !tourneyOpen;
+  syncTourneyUI();
+});
+
+// ═══════════════════════════════════════════════════════════════
 //  NEW GAME / RESET
 // ═══════════════════════════════════════════════════════════════
 function showDialog(title, msg, action) {
@@ -1122,6 +1233,76 @@ function showDialog(title, msg, action) {
   document.getElementById('dlg-msg').textContent   = msg;
   document.getElementById('overlay').classList.add('open');
 }
+
+function showPregame() {
+  document.getElementById('settings-screen').style.display  = 'none';
+  document.getElementById('game-screen').style.display      = 'none';
+  document.getElementById('pregame-screen').style.display   = 'flex';
+  renderPregameList();
+}
+
+function renderPregameList() {
+  const list = document.getElementById('pregame-name-list');
+  list.innerHTML = '';
+  for (let i = 0; i < S.playerCount; i++) {
+    const row = document.createElement('div');
+    row.className = 'name-row';
+    row.dataset.idx = i;
+
+    const num = document.createElement('span');
+    num.className = 'name-num';
+    num.textContent = (i + 1) + '.';
+
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.value = S.names[i] || `שחקן ${i + 1}`;
+    inp.placeholder = `שחקן ${i + 1}`;
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'btn-sm btn-reset';
+    removeBtn.textContent = 'הסר ✕';
+    removeBtn.style.padding = '.3rem .6rem';
+    removeBtn.style.fontSize = '.75rem';
+    removeBtn.disabled = S.playerCount <= 2;
+    removeBtn.addEventListener('click', () => {
+      if (S.playerCount <= 2) return;
+      syncPregameInputs();
+      S.names.splice(i, 1);
+      S.playerCount--;
+      save();
+      renderPregameList();
+    });
+
+    row.appendChild(num);
+    row.appendChild(inp);
+    row.appendChild(removeBtn);
+    list.appendChild(row);
+  }
+}
+
+function syncPregameInputs() {
+  const inputs = document.querySelectorAll('#pregame-name-list input');
+  inputs.forEach((inp, i) => {
+    S.names[i] = inp.value.trim() || `שחקן ${i + 1}`;
+  });
+}
+
+document.getElementById('pregame-add-btn').addEventListener('click', () => {
+  if (S.playerCount >= 10) return;
+  syncPregameInputs();
+  S.playerCount++;
+  if (!S.names[S.playerCount - 1]) S.names[S.playerCount - 1] = `שחקן ${S.playerCount}`;
+  save();
+  renderPregameList();
+});
+
+document.getElementById('pregame-start-btn').addEventListener('click', () => {
+  syncPregameInputs();
+  S.names = S.names.slice(0, S.playerCount);
+  save();
+  playGroove();
+  initGame();
+});
 
 document.getElementById('new-game-btn').addEventListener('click', () =>
   showDialog('משחק חדש', 'להתחיל משחק חדש עם אותם שחקנים?', 'newgame'));
@@ -1132,12 +1313,13 @@ document.getElementById('reset-btn').addEventListener('click', () =>
 document.getElementById('dlg-ok').addEventListener('click', () => {
   document.getElementById('overlay').classList.remove('open');
   if (pendingAction === 'newgame') {
-    playGroove();
-    initGame();
+    showPregame();
   } else if (pendingAction === 'reset') {
     playGroove();
+    clearTourneyLog();
     S.playerCount = 2;
     S.names       = ['שחקן 1', 'שחקן 2'];
+    S.gameCount   = 0;
     S.screen      = 'settings';
     save();
     showSettings();
